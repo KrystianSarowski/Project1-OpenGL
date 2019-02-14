@@ -1,19 +1,76 @@
 #include <Game.h>
+#include <Cube.h>
 
-static bool flip;
+// Helper to convert Number to String for HUD
+template <typename T>
+string toString(T number)
+{
+	ostringstream oss;
+	oss << number;
+	return oss.str();
+}
 
-Game::Game() : window(VideoMode(800, 600), "OpenGL Cube Texturing")
+GLuint	vsid,		// Vertex Shader ID
+fsid,		// Fragment Shader ID
+progID,		// Program ID
+vao = 0,	// Vertex Array ID
+vbo,		// Vertex Buffer ID
+vib,		// Vertex Index Buffer
+to[1];		// Texture ID
+GLint	positionID,	// Position ID
+colorID,	// Color ID
+textureID,	// Texture ID
+uvID,		// UV ID
+mvpID,		// Model View Projection ID
+x_offsetID, // X offset ID
+y_offsetID,	// Y offset ID
+z_offsetID;	// Z offset ID
+
+GLenum	error;		// OpenGL Error Code
+
+
+					//Please see .//Assets//Textures// for more textures
+const string filename = ".//Assets//Textures//grid_wip.tga";
+
+int width;						// Width of texture
+int height;						// Height of texture
+int comp_count;					// Component of texture
+
+unsigned char* img_data;		// image data
+
+mat4 mvp, projection,
+view, model;			// Model View Projection
+
+Font font;						// Game font
+
+float x_offset, y_offset, z_offset; // offset on screen (Vertex Shader)
+
+Game::Game() :
+	window(VideoMode(800, 600),
+		"Introduction to OpenGL Texturing")
+{
+}
+
+Game::Game(sf::ContextSettings settings) :
+	window(VideoMode(800, 600),
+		"Introduction to OpenGL Texturing",
+		sf::Style::Default,
+		settings)
 {
 }
 
 Game::~Game() {}
 
+
 void Game::run()
 {
-
 	initialize();
 
 	Event event;
+
+	float rotation = 0.01f;
+	float start_value = 0.0f;
+	float end_value = 1.0f;
 
 	while (isRunning) {
 
@@ -27,48 +84,61 @@ void Game::run()
 			{
 				isRunning = false;
 			}
+
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+			{
+				// Set Model Rotation
+				if (!animate)
+				{
+					animate = true;
+					if (rotation < 0)
+						rotation *= -1; // Set Positive
+					animation = glm::vec3(0, 1, 0); //Rotate Y
+				}
+			}
+
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+			{
+				// Set Model Rotation
+				if (!animate)
+				{
+					animate = true;
+					if (rotation >= 0)
+						rotation *= -1; // Set Negative
+					animation = glm::vec3(0, 1, 0); //Rotate Y
+				}
+			}
+
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+			{
+				// Set Model Rotation
+				model = rotate(model, -0.01f, glm::vec3(1, 0, 0)); // Rotate
+			}
+
+			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+			{
+				// Set Model Rotation
+				model = rotate(model, 0.01f, glm::vec3(1, 0, 0)); // Rotate
+			}
+
+			if (animate)
+			{
+				rotation += (1.0f * rotation) + 0.05f;
+				model = rotate(model, 0.01f, animation); // Rotate
+				rotation = 0.0f;
+				animate = false;
+			}
 		}
 		update();
 		render();
 	}
 
+#if (DEBUG >= 2)
+	DEBUG_MSG("Calling Cleanup...");
+#endif
+	unload();
+
 }
-
-typedef struct
-{
-	float coordinate[3];
-	float color[4];
-	float texel[2];
-} MyVertex;
-
-MyVertex initialVertex[36]; //Original Vertexes
-MyVertex vertex[36];		//Current Vertexes
-GLubyte triangles[36];		//Triangles to be drawn
-
-/* Variable to hold the VBO identifier and shader data */
-GLuint	index,		//Index to draw
-		vsid,		//Vertex Shader ID
-		fsid,		//Fragment Shader ID
-		progID,		//Program ID
-		vao = 0,	//Vertex Array ID
-		vbo[1],		// Vertex Buffer ID
-		positionID, //Position ID
-		colorID,	// Color ID
-		to,			// Texture ID 1 to 32
-		textureID,	//Texture ID
-		texelID;	// Texel ID
-
-//const string filename = "texture.tga";
-//const string filename = "cube.tga";
-
-const string filename = "MyCube.tga";
-
-int width; //width of texture
-int height; //height of texture
-int comp_count; //Component of texture
-const int number = 4; //4 = RGBA
-
-unsigned char* img_data;
 
 void Game::initialize()
 {
@@ -76,320 +146,56 @@ void Game::initialize()
 	GLint isCompiled = 0;
 	GLint isLinked = 0;
 
-	glewInit();
+	if (!(!glewInit())) { DEBUG_MSG("glewInit() failed"); }
 
 	DEBUG_MSG(glGetString(GL_VENDOR));
 	DEBUG_MSG(glGetString(GL_RENDERER));
 	DEBUG_MSG(glGetString(GL_VERSION));
 
-	//Declare all starting positions of the vertexes.
-	initialVertex[0].coordinate[0] = -0.5f;
-	initialVertex[0].coordinate[1] = -0.5f;
-	initialVertex[0].coordinate[2] = -0.5f;
-
-	initialVertex[1].coordinate[0] = -0.5f;
-	initialVertex[1].coordinate[1] = -0.5f;
-	initialVertex[1].coordinate[2] = 0.5f;
-
-	initialVertex[2].coordinate[0] = -0.5f;
-	initialVertex[2].coordinate[1] = 0.5f;
-	initialVertex[2].coordinate[2] = -0.5f;
-
-	initialVertex[3].coordinate[0] = 0.5f;
-	initialVertex[3].coordinate[1] = 0.5f;
-	initialVertex[3].coordinate[2] = -0.5f;
-
-	initialVertex[4].coordinate[0] = -0.5f;
-	initialVertex[4].coordinate[1] = -0.5f;
-	initialVertex[4].coordinate[2] = -0.5f;
-
-	initialVertex[5].coordinate[0] = -0.5f;
-	initialVertex[5].coordinate[1] = 0.5f;
-	initialVertex[5].coordinate[2] = -0.5f;
-
-	initialVertex[6].coordinate[0] = 0.5f;
-	initialVertex[6].coordinate[1] = -0.5f;
-	initialVertex[6].coordinate[2] = 0.5f;
-
-	initialVertex[7].coordinate[0] = -0.5f;
-	initialVertex[7].coordinate[1] = -0.5f;
-	initialVertex[7].coordinate[2] = -0.5f;
-
-	initialVertex[8].coordinate[0] = 0.5f;
-	initialVertex[8].coordinate[1] = -0.5f;
-	initialVertex[8].coordinate[2] = -0.5f;
-
-	initialVertex[9].coordinate[0] = 0.5f;
-	initialVertex[9].coordinate[1] = 0.5f;
-	initialVertex[9].coordinate[2] = -0.5f;
-
-	initialVertex[10].coordinate[0] = 0.5f;
-	initialVertex[10].coordinate[1] = -0.5f;
-	initialVertex[10].coordinate[2] = -0.5f;
-
-	initialVertex[11].coordinate[0] = -0.5f;
-	initialVertex[11].coordinate[1] = -0.5f;
-	initialVertex[11].coordinate[2] = -0.5f;
-
-	initialVertex[12].coordinate[0] = -0.5f;
-	initialVertex[12].coordinate[1] = -0.5f;
-	initialVertex[12].coordinate[2] = 0.5f;
-
-	initialVertex[13].coordinate[0] = -0.5f;
-	initialVertex[13].coordinate[1] = 0.5f;
-	initialVertex[13].coordinate[2] = 0.5f;
-
-	initialVertex[14].coordinate[0] = -0.5f;
-	initialVertex[14].coordinate[1] = 0.5f;
-	initialVertex[14].coordinate[2] = -0.5f;
-
-	initialVertex[15].coordinate[0] = 0.5f;
-	initialVertex[15].coordinate[1] = -0.5f;
-	initialVertex[15].coordinate[2] = 0.5f;
-
-	initialVertex[16].coordinate[0] = -0.5f;
-	initialVertex[16].coordinate[1] = -0.5f;
-	initialVertex[16].coordinate[2] = 0.5f;
-
-	initialVertex[17].coordinate[0] = -0.5f;
-	initialVertex[17].coordinate[1] = -0.5f;
-	initialVertex[17].coordinate[2] = -0.5f;
-
-	initialVertex[18].coordinate[0] = -0.5f;
-	initialVertex[18].coordinate[1] = 0.5f;
-	initialVertex[18].coordinate[2] = 0.5f;
-
-	initialVertex[19].coordinate[0] = -0.5f;
-	initialVertex[19].coordinate[1] = -0.5f;
-	initialVertex[19].coordinate[2] = 0.5f;
-
-	initialVertex[20].coordinate[0] = 0.5f;
-	initialVertex[20].coordinate[1] = -0.5f;
-	initialVertex[20].coordinate[2] = 0.5f;
-
-	initialVertex[21].coordinate[0] = 0.5f;
-	initialVertex[21].coordinate[1] = 0.5f;
-	initialVertex[21].coordinate[2] = 0.5f;
-
-	initialVertex[22].coordinate[0] = 0.5f;
-	initialVertex[22].coordinate[1] = -0.5f;
-	initialVertex[22].coordinate[2] = -0.5f;
-
-	initialVertex[23].coordinate[0] = 0.5f;
-	initialVertex[23].coordinate[1] = 0.5f;
-	initialVertex[23].coordinate[2] = -0.5f;
-
-	initialVertex[24].coordinate[0] = 0.5f;
-	initialVertex[24].coordinate[1] = -0.5f;
-	initialVertex[24].coordinate[2] = -0.5f;
-
-	initialVertex[25].coordinate[0] = 0.5f;
-	initialVertex[25].coordinate[1] = 0.5f;
-	initialVertex[25].coordinate[2] = 0.5f;
-
-	initialVertex[26].coordinate[0] = 0.5f;
-	initialVertex[26].coordinate[1] = -0.5f;
-	initialVertex[26].coordinate[2] = 0.5f;
-
-	initialVertex[27].coordinate[0] = 0.5f;
-	initialVertex[27].coordinate[1] = 0.5f;
-	initialVertex[27].coordinate[2] = 0.5f;
-
-	initialVertex[28].coordinate[0] = 0.5f;
-	initialVertex[28].coordinate[1] = 0.5f;
-	initialVertex[28].coordinate[2] = -0.5f;
-
-	initialVertex[29].coordinate[0] = -0.5f;
-	initialVertex[29].coordinate[1] = 0.5f;
-	initialVertex[29].coordinate[2] = -0.5f;
-
-	initialVertex[30].coordinate[0] = 0.5f;
-	initialVertex[30].coordinate[1] = 0.5f;
-	initialVertex[30].coordinate[2] = 0.5f;
-
-	initialVertex[31].coordinate[0] = -0.5f;
-	initialVertex[31].coordinate[1] = 0.5f;
-	initialVertex[31].coordinate[2] = -0.5f;
-
-	initialVertex[32].coordinate[0] = -0.5f;
-	initialVertex[32].coordinate[1] = 0.5f;
-	initialVertex[32].coordinate[2] = 0.5f;
-
-	initialVertex[33].coordinate[0] = 0.5f;
-	initialVertex[33].coordinate[1] = 0.5f;
-	initialVertex[33].coordinate[2] = 0.5f;
-
-	initialVertex[34].coordinate[0] = -0.5f;
-	initialVertex[34].coordinate[1] = 0.5f;
-	initialVertex[34].coordinate[2] = 0.5f;
-
-	initialVertex[35].coordinate[0] = 0.5f;
-	initialVertex[35].coordinate[1] = -0.5f;
-	initialVertex[35].coordinate[2] = 0.5f;
-
-	initialVertex[0].texel[0] = 0.75f;
-	initialVertex[0].texel[1] = 0.25f;
-
-	initialVertex[1].texel[0] = 1.0f;
-	initialVertex[1].texel[1] = 0.25f;
-
-	initialVertex[2].texel[0] = 1.0f;
-	initialVertex[2].texel[1] = 0.5f;
-
-	initialVertex[3].texel[0] = 0.75f;
-	initialVertex[3].texel[1] = 0.5f;
-
-	initialVertex[4].texel[0] = 0.5f;
-	initialVertex[4].texel[1] = 0.25f;
-
-	initialVertex[5].texel[0] = 0.5f;
-	initialVertex[5].texel[1] = 0.5f;
-
-	initialVertex[6].texel[0] = 0.25f;
-	initialVertex[6].texel[1] = 0.0f;
-
-	initialVertex[7].texel[0] = 0.0f;
-	initialVertex[7].texel[1] = 0.25f;
-
-	initialVertex[8].texel[0] = 0.25f;
-	initialVertex[8].texel[1] = 0.25f;
-
-	initialVertex[9].texel[0] = 0.50f;
-	initialVertex[9].texel[1] = 0.5f;
-
-	initialVertex[10].texel[0] = 0.50f;
-	initialVertex[10].texel[1] = 0.25f;
-
-	initialVertex[11].texel[0] = 0.75f;
-	initialVertex[11].texel[1] = 0.25f;
-
-	initialVertex[12].texel[0] = 0.75f;
-	initialVertex[12].texel[1] = 0.25f;
-
-	initialVertex[13].texel[0] = 1.0f;
-	initialVertex[13].texel[1] = 0.5f;
-
-	initialVertex[14].texel[0] = 0.75f;
-	initialVertex[14].texel[1] = 0.5f;
-
-	initialVertex[15].texel[0] = 0.25f;
-	initialVertex[15].texel[1] = 0.25f;
-
-	initialVertex[16].texel[0] = 0.0f;
-	initialVertex[16].texel[1] = 0.25f;
-
-	initialVertex[17].texel[0] = 0.0f;
-	initialVertex[17].texel[1] = 0.0f;
-
-	initialVertex[18].texel[0] = 0.0f;
-	initialVertex[18].texel[1] = 0.5f;
-
-	initialVertex[19].texel[0] = 0.0f;
-	initialVertex[19].texel[1] = 0.25f;
-
-	initialVertex[20].texel[0] = 0.25f;
-	initialVertex[20].texel[1] = 0.25f;
-
-	initialVertex[21].texel[0] = 0.25f;
-	initialVertex[21].texel[1] = 0.5f;
-
-	initialVertex[22].texel[0] = 0.50f;
-	initialVertex[22].texel[1] = 0.25f;
-
-	initialVertex[23].texel[0] = 0.50f;
-	initialVertex[23].texel[1] = 0.5f;
-
-	initialVertex[24].texel[0] = 0.25f;
-	initialVertex[24].texel[1] = 0.5f;
-
-	initialVertex[25].texel[0] = 0.25f;
-	initialVertex[25].texel[1] = 0.25f;
-
-	initialVertex[26].texel[0] = 0.25f;
-	initialVertex[26].texel[1] = 0.25f;
-
-	initialVertex[27].texel[0] = 0.0f;
-	initialVertex[27].texel[1] = 0.5f;
-
-	initialVertex[28].texel[0] = 0.0f;
-	initialVertex[28].texel[1] = 0.75f;
-
-	initialVertex[29].texel[0] = 0.25f;
-	initialVertex[29].texel[1] = 0.75f;
-
-	initialVertex[30].texel[0] = 0.25f;
-	initialVertex[30].texel[1] = 0.5f;
-
-	initialVertex[31].texel[0] = 0.0f;
-	initialVertex[31].texel[1] = 0.75f;
-
-	initialVertex[32].texel[0] = 0.0f;
-	initialVertex[32].texel[1] = 0.5f;
-
-	initialVertex[33].texel[0] = 0.25f;
-	initialVertex[33].texel[1] = 0.5f;
-
-	initialVertex[34].texel[0] = 0.0f;
-	initialVertex[34].texel[1] = 0.5f;
-
-	initialVertex[35].texel[0] = 0.25f;
-	initialVertex[35].texel[1] = 0.25f;
-
-	//Set current vertex to initial.
-	for (int i = 0; i < 36; i++)
-	{
-		vertex[i] = initialVertex[i];
-	}
-
-	/*Index of Poly / Triangle to Draw */
-	triangles[0] = 0;   triangles[1] = 1;   triangles[2] = 2;
-	triangles[3] = 3;   triangles[4] = 4;   triangles[5] = 5;
-	triangles[6] = 6;   triangles[7] = 7;   triangles[8] = 8;
-	triangles[9] = 9;   triangles[10] = 10;   triangles[11] = 11;
-	triangles[12] = 12;   triangles[13] = 13;   triangles[14] = 14;
-	triangles[15] = 15;   triangles[16] = 16;   triangles[17] = 17;
-	triangles[18] = 18;   triangles[19] = 19;   triangles[20] = 20;
-	triangles[21] = 21;   triangles[22] = 22;   triangles[23] = 23;
-	triangles[24] = 24;   triangles[25] = 25;   triangles[26] = 26;
-	triangles[27] = 27;   triangles[28] = 28;   triangles[29] = 29;
-	triangles[30] = 30;   triangles[31] = 31;   triangles[32] = 32;
-	triangles[33] = 33;   triangles[34] = 34;   triangles[35] = 35;
-
-	/* Create a new VBO using VBO id */
-	glGenBuffers(1, vbo);
-
-	/* Bind the VBO */
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-
-	/* Upload vertex data to GPU */
-	glBufferData(GL_ARRAY_BUFFER, sizeof(MyVertex) * 36, vertex, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	glGenBuffers(1, &index);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte) * 36, triangles, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-
-	const char* vs_src = "#version 400\n\r"
-		"in vec4 sv_position;"
+	// Vertex Array Buffer
+	glGenBuffers(1, &vbo);		// Generate Vertex Buffer
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+	// Vertices (3) x,y,z , Colors (4) RGBA, UV/ST (2)
+	glBufferData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS) + (2 * UVS)) * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &vib); //Generate Vertex Index Buffer
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vib);
+
+	// Indices to be drawn
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * INDICES * sizeof(GLuint), indices, GL_STATIC_DRAW);
+
+	// NOTE: uniforms values must be used within Shader so that they 
+	// can be retreived
+	const char* vs_src =
+		"#version 400\n\r"
+		""
+		"in vec3 sv_position;"
 		"in vec4 sv_color;"
-		"in vec2 sv_texel;"
+		"in vec2 sv_uv;"
+		""
 		"out vec4 color;"
-		"out vec2 texel;"
+		"out vec2 uv;"
+		""
+		"uniform mat4 sv_mvp;"
+		"uniform float sv_x_offset;"
+		"uniform float sv_y_offset;"
+		"uniform float sv_z_offset;"
+		""
 		"void main() {"
 		"	color = sv_color;"
-		"	texel = sv_texel;"
-		"	gl_Position = sv_position;"
+		"	uv = sv_uv;"
+		//"	gl_Position = vec4(sv_position, 1);"
+		"	gl_Position = sv_mvp * vec4(sv_position.x + sv_x_offset, sv_position.y + sv_y_offset, sv_position.z + sv_z_offset, 1 );"
 		"}"; //Vertex Shader Src
 
 	DEBUG_MSG("Setting Up Vertex Shader");
 
-	vsid = glCreateShader(GL_VERTEX_SHADER); //Create Shader and set ID
-	glShaderSource(vsid, 1, (const GLchar**)&vs_src, NULL); // Set the shaders source
-	glCompileShader(vsid); //Check that the shader compiles
+	vsid = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vsid, 1, (const GLchar**)&vs_src, NULL);
+	glCompileShader(vsid);
 
-	//Check is Shader Compiled
+	// Check is Shader Compiled
 	glGetShaderiv(vsid, GL_COMPILE_STATUS, &isCompiled);
 
 	if (isCompiled == GL_TRUE) {
@@ -401,13 +207,19 @@ void Game::initialize()
 		DEBUG_MSG("ERROR: Vertex Shader Compilation Error");
 	}
 
-	const char* fs_src = "#version 400\n\r"
+	const char* fs_src =
+		"#version 400\n\r"
+		""
 		"uniform sampler2D f_texture;"
+		""
 		"in vec4 color;"
-		"in vec2 texel;"
+		"in vec2 uv;"
+		""
 		"out vec4 fColor;"
+		""
 		"void main() {"
-		"	fColor = texture(f_texture, texel.st);"
+		"	fColor = color - texture2D(f_texture, uv);"
+		""
 		"}"; //Fragment Shader Src
 
 	DEBUG_MSG("Setting Up Fragment Shader");
@@ -415,7 +227,8 @@ void Game::initialize()
 	fsid = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fsid, 1, (const GLchar**)&fs_src, NULL);
 	glCompileShader(fsid);
-	//Check is Shader Compiled
+
+	// Check is Shader Compiled
 	glGetShaderiv(fsid, GL_COMPILE_STATUS, &isCompiled);
 
 	if (isCompiled == GL_TRUE) {
@@ -428,12 +241,12 @@ void Game::initialize()
 	}
 
 	DEBUG_MSG("Setting Up and Linking Shader");
-	progID = glCreateProgram();	//Create program in GPU
-	glAttachShader(progID, vsid); //Attach Vertex Shader to Program
-	glAttachShader(progID, fsid); //Attach Fragment Shader to Program
+	progID = glCreateProgram();
+	glAttachShader(progID, vsid);
+	glAttachShader(progID, fsid);
 	glLinkProgram(progID);
 
-	//Check is Shader Linked
+	// Check is Shader Linked
 	glGetProgramiv(progID, GL_LINK_STATUS, &isLinked);
 
 	if (isLinked == 1) {
@@ -444,10 +257,8 @@ void Game::initialize()
 		DEBUG_MSG("ERROR: Shader Link Error");
 	}
 
-	// Use Progam on GPU
-	// https://www.opengl.org/sdk/docs/man/html/glUseProgram.xhtml
-	glUseProgram(progID);
-
+	// Set image data
+	// https://github.com/nothings/stb/blob/master/stb_image.h
 	img_data = stbi_load(filename.c_str(), &width, &height, &comp_count, 4);
 
 	if (img_data == NULL)
@@ -456,171 +267,195 @@ void Game::initialize()
 	}
 
 	glEnable(GL_TEXTURE_2D);
-	glGenTextures(1, &to);
-	glBindTexture(GL_TEXTURE_2D, to);
+	glGenTextures(1, &to[0]);
+	glBindTexture(GL_TEXTURE_2D, to[0]);
 
-	//Wrap around
-	//https://www.khronos.org/opengles/sdk/docs/man/xhtml/glTexParameter.xml
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// Wrap around
+	// https://www.khronos.org/opengles/sdk/docs/man/xhtml/glTexParameter.xml
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-	//Filtering
-	//https://www.khronos.org/opengles/sdk/docs/man/xhtml/glTexParameter.xml
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// Filtering
+	// https://www.khronos.org/opengles/sdk/docs/man/xhtml/glTexParameter.xml
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	//Bind to OpenGL
-	//https://www.khronos.org/opengles/sdk/docs/man/xhtml/glTexImage2D.xml
-	glTexImage2D(GL_TEXTURE_2D, //2D Texture Image
-		0, //Mipmapping Level 
-		GL_RGBA, //GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA, GL_RGB, GL_BGR, GL_RGBA 
-		width, //Width
-		height, //Height
-		0, //Border
-		GL_RGBA, //Bitmap
-		GL_UNSIGNED_BYTE, img_data);
+	// Bind to OpenGL
+	// https://www.khronos.org/opengles/sdk/docs/man/xhtml/glTexImage2D.xml
+	glTexImage2D(
+		GL_TEXTURE_2D,			// 2D Texture Image
+		0,						// Mipmapping Level 
+		GL_RGBA,				// GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA, GL_RGB, GL_BGR, GL_RGBA 
+		width,					// Width
+		height,					// Height
+		0,						// Border
+		GL_RGBA,				// Bitmap
+		GL_UNSIGNED_BYTE,		// Specifies Data type of image data
+		img_data				// Image Data
+	);
 
-	// Find variables in the shader
-	//https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGetAttribLocation.xml
-	positionID = glGetAttribLocation(progID, "sv_position");
-	colorID = glGetAttribLocation(progID, "sv_color");
-	texelID = glGetAttribLocation(progID, "sv_texel");
-	textureID = glGetUniformLocation(progID, "f_texture");
+	// Projection Matrix 
+	projection = perspective(
+		45.0f,					// Field of View 45 degrees
+		4.0f / 3.0f,			// Aspect ratio
+		5.0f,					// Display Range Min : 0.1f unit
+		100.0f					// Display Range Max : 100.0f unit
+	);
+
+	// Camera Matrix
+	view = lookAt(
+		vec3(0.0f, 4.0f, 10.0f),	// Camera (x,y,z), in World Space
+		vec3(0.0f, 0.0f, 0.0f),		// Camera looking at origin
+		vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
+	);
+
+	// Model matrix
+	model = mat4(
+		1.0f					// Identity Matrix
+	);
 
 	// Enable Depth Test
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_CULL_FACE);
+
+	// Load Font
+	font.loadFromFile(".//Assets//Fonts//BBrick.ttf");
 }
 
 void Game::update()
 {
-	//Move the cube up or down.
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-	{
-		m_displacmentVector.y += 0.0005f;
-	}
+#if (DEBUG >= 2)
+	DEBUG_MSG("Updating...");
+#endif
+	// Update Model View Projection
+	// For mutiple objects (cubes) create multiple models
+	// To alter Camera modify view & projection
+	mvp = projection * view * model;
 
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-	{
-		m_displacmentVector.y -= 0.0005f;
-	}
-
-	//Move the cube left and right
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-	{
-		m_displacmentVector.x -= 0.0005f;
-	}
-
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-	{
-		m_displacmentVector.x += 0.0005f;
-	}
-
-	//Rotate on Z clockwise.
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
-	{
-		m_rotationAngleZ += 0.0005f;
-
-		if (m_rotationAngleZ > 360.0f)
-		{
-			m_rotationAngleZ -= 360.0f;
-		}
-	}
-
-	//Rotate on X clockwise.
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::X))
-	{
-
-		m_rotationAngleX += 0.0005f;
-
-		if (m_rotationAngleX > 360.0f)
-		{
-			m_rotationAngleX -= 360.0f;
-		}
-	}
-
-	//Rotate on Y clockwise
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Y))
-	{
-		m_rotationAngleY += 0.0005f;
-
-		if (m_rotationAngleY > 360.0f)
-		{
-			m_rotationAngleY -= 360.0f;
-		}
-	}
-
-	//Scale down.
-	if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-	{
-		m_scale -= 0.0005f;
-	}
-
-	//Scale up.
-	else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-	{
-		m_scale += 0.0005f;
-	}
-
-	//Update the position of all the points.
-	for (int i = 0; i < 36; i++)
-	{
-		//Assigne the initial vertex to a tempory vector
-		MyVector3 tempVect{ initialVertex[i].coordinate[0], initialVertex[i].coordinate[1], initialVertex[i].coordinate[2] };
-
-		tempVect = MyMatrix3::rotationX(m_rotationAngleX) * tempVect;
-		tempVect = MyMatrix3::rotationY(m_rotationAngleY) * tempVect;
-		tempVect = MyMatrix3::rotationZ(m_rotationAngleZ) * tempVect;
-		tempVect = MyMatrix3::scale(m_scale) * tempVect;
-		tempVect += m_displacmentVector;
-		vertex[i].coordinate[0] = tempVect.x;
-		vertex[i].coordinate[1] = tempVect.y;
-		vertex[i].coordinate[2] = tempVect.z;
-	}
-
+	DEBUG_MSG(model[0].x);
+	DEBUG_MSG(model[0].y);
+	DEBUG_MSG(model[0].z);
 }
 
 void Game::render()
 {
 
 #if (DEBUG >= 2)
-	DEBUG_MSG("Drawing...");
+	DEBUG_MSG("Render Loop...");
 #endif
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	// Save current OpenGL render states
+	// https://www.sfml-dev.org/documentation/2.0/classsf_1_1RenderTarget.php#a8d1998464ccc54e789aaf990242b47f7
+	window.pushGLStates();
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index);
+	// Find mouse position using sf::Mouse
+	int x = Mouse::getPosition(window).x;
+	int y = Mouse::getPosition(window).y;
 
-	/*	As the data positions will be updated by the this program on the
-		CPU bind the updated data to the GPU for drawing	*/
-	glBufferData(GL_ARRAY_BUFFER, sizeof(MyVertex) * 36, vertex, GL_STATIC_DRAW);
+	string hud = "Heads Up Display ["
+		+ string(toString(x))
+		+ "]["
+		+ string(toString(y))
+		+ "]";
 
-	/*	Draw Triangle from VBO	(set where to start from as VBO can contain
-		model components that 'are' and 'are not' to be drawn )	*/
+	Text text(hud, font);
 
-	//Set Active Texture .... 32
+	text.setColor(sf::Color(255, 255, 255, 170));
+	text.setPosition(50.f, 50.f);
+
+	window.draw(text);
+
+	// Restore OpenGL render states
+	// https://www.sfml-dev.org/documentation/2.0/classsf_1_1RenderTarget.php#a8d1998464ccc54e789aaf990242b47f7
+
+	window.popGLStates();
+
+	// Rebind Buffers and then set SubData
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vib);
+
+	// Use Progam on GPU
+	glUseProgram(progID);
+
+	// Find variables within the shader
+	// https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGetAttribLocation.xml
+	positionID = glGetAttribLocation(progID, "sv_position");
+	if (positionID < 0) { DEBUG_MSG("positionID not found"); }
+
+	colorID = glGetAttribLocation(progID, "sv_color");
+	if (colorID < 0) { DEBUG_MSG("colorID not found"); }
+
+	uvID = glGetAttribLocation(progID, "sv_uv");
+	if (uvID < 0) { DEBUG_MSG("uvID not found"); }
+
+	textureID = glGetUniformLocation(progID, "f_texture");
+	if (textureID < 0) { DEBUG_MSG("textureID not found"); }
+
+	mvpID = glGetUniformLocation(progID, "sv_mvp");
+	if (mvpID < 0) { DEBUG_MSG("mvpID not found"); }
+
+	x_offsetID = glGetUniformLocation(progID, "sv_x_offset");
+	if (x_offsetID < 0) { DEBUG_MSG("x_offsetID not found"); }
+
+	y_offsetID = glGetUniformLocation(progID, "sv_y_offset");
+	if (y_offsetID < 0) { DEBUG_MSG("y_offsetID not found"); }
+
+	z_offsetID = glGetUniformLocation(progID, "sv_z_offset");
+	if (z_offsetID < 0) { DEBUG_MSG("z_offsetID not found"); };
+
+	// VBO Data....vertices, colors and UV's appended
+	//glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), vertices);
+	//glBufferSubData(GL_ARRAY_BUFFER, 3 * VERTICES * sizeof(GLfloat), 4 * COLORS * sizeof(GLfloat), colors);
+	//glBufferSubData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
+
+	// Send transformation to shader mvp uniform [0][0] is start of array
+	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
+
+	// Set Active Texture .... 32 GL_TEXTURE0 .... GL_TEXTURE31
 	glActiveTexture(GL_TEXTURE0);
-	glUniform1i(textureID, 0);
+	glUniform1i(textureID, 0); // 0 .... 31
 
-	// Set pointers for each parameter
-	// https://www.opengl.org/sdk/docs/man4/html/glVertexAttribPointer.xhtml
-	glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, sizeof(MyVertex), 0);
-	glVertexAttribPointer(colorID, 4, GL_FLOAT, GL_FALSE, sizeof(MyVertex), (void*)(3 * sizeof(float)));
-	glVertexAttribPointer(texelID, 2, GL_FLOAT, GL_FALSE, sizeof(MyVertex), (void*)(7 * sizeof(float)));
+							   // Set the X, Y and Z offset (this allows for multiple cubes via different shaders)
+							   // Experiment with these values to change screen positions
+	glUniform1f(x_offsetID, 0.00f);
+	glUniform1f(y_offsetID, 0.00f);
+	glUniform1f(z_offsetID, 0.00f);
 
-	//Enable Arrays
+	// Set pointers for each parameter (with appropriate starting positions)
+	// https://www.khronos.org/opengles/sdk/docs/man/xhtml/glVertexAttribPointer.xml
+	glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(colorID, 4, GL_FLOAT, GL_FALSE, 0, (VOID*)(3 * VERTICES * sizeof(GLfloat)));
+	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat)));
+
+	// Enable Arrays
 	glEnableVertexAttribArray(positionID);
 	glEnableVertexAttribArray(colorID);
-	glEnableVertexAttribArray(texelID);
+	glEnableVertexAttribArray(uvID);
 
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, (char*)NULL + 0);
-
+	// Draw Element Arrays
+	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	window.display();
 
+	// Disable Arrays
+	glDisableVertexAttribArray(positionID);
+	glDisableVertexAttribArray(colorID);
+	glDisableVertexAttribArray(uvID);
+
+	// Unbind Buffers with 0 (Resets OpenGL States...important step)
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	// Reset the Shader Program to Use
+	glUseProgram(0);
+
+	// Check for OpenGL Error code
+	error = glGetError();
+	if (error != GL_NO_ERROR) {
+		DEBUG_MSG(error);
+	}
 }
 
 void Game::unload()
@@ -628,8 +463,13 @@ void Game::unload()
 #if (DEBUG >= 2)
 	DEBUG_MSG("Cleaning up...");
 #endif
-	glDeleteProgram(progID);
-	glDeleteBuffers(1, vbo);
-	stbi_image_free(img_data); //Free image
+	glDetachShader(progID, vsid);	// Shader could be used with more than one progID
+	glDetachShader(progID, fsid);	// ..
+	glDeleteShader(vsid);			// Delete Vertex Shader
+	glDeleteShader(fsid);			// Delete Fragment Shader
+	glDeleteProgram(progID);		// Delete Shader
+	glDeleteBuffers(1, &vbo);		// Delete Vertex Buffer
+	glDeleteBuffers(1, &vib);		// Delete Vertex Index Buffer
+	stbi_image_free(img_data);		// Free image stbi_image_free(..)
 }
 
