@@ -71,7 +71,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir);$(GLEW_SDK)\include;$(SFML_SDK)\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(GLEW_SDK)\include;$(GLM_SDK);$(SFML_SDK)\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SFML_SDK)\lib;$(GLEW_SDK)\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -92,7 +92,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(GLM_SDK);$(GLEW_SDK)/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -159,17 +159,35 @@ xcopy $(GLEW_SDK)\bin\Release\Win32 $(TargetDir) /C /Y</Command>
   <ItemGroup>
     <ClInclude Include="Cube.h" />
     <ClInclude Include="Debug.h" />
+    <ClInclude Include="Easing.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Cube.cpp" />
+    <ClCompile Include="Easing.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="stb_image.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
+    <None Include="Assets\Textures\cube.pdn" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Textures\coordinates.tga" />
+    <Image Include="Assets\Textures\cube.png" />
+    <Image Include="Assets\Textures\cube.tga" />
+    <Image Include="Assets\Textures\grid.tga" />
+    <Image Include="Assets\Textures\grid_wip.tga" />
+    <Image Include="Assets\Textures\minecraft.tga" />
+    <Image Include="Assets\Textures\texture.tga" />
+    <Image Include="Assets\Textures\texture_2.tga" />
+    <Image Include="Assets\Textures\uvtemplate.tga" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="Assets\Fonts\BBrick.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
