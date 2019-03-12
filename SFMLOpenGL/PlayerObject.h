@@ -1,6 +1,4 @@
-#ifndef GAME_OBJECT_H
-#define GAME_OBJECT_H
-
+#pragma once
 #if !defined(ARRAY_SIZE)
 #define ARRAY_SIZE(x) (sizeof((x)) / sizeof((x)[0]))
 #endif
@@ -14,7 +12,7 @@
 
 using namespace glm;
 
-class GameObject
+class PlayerObject
 {
 private:
 	// Cube Elements
@@ -27,8 +25,8 @@ private:
 	vec3 m_rotation;
 
 public:
-	GameObject();
-	~GameObject();
+	PlayerObject();
+	~PlayerObject();
 
 	vec3 getPosition();
 
@@ -56,6 +54,4 @@ public:
 	// 3 Colors RGB
 	int getIndexCount();
 };
-
-#endif // !GAME_OBJECT_H
 

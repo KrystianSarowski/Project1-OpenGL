@@ -62,10 +62,13 @@ Game::Game(sf::ContextSettings settings) :
 	settings)
 {
 	game_object[0] = new GameObject();
-	game_object[0]->setPosition(vec3(1.0f, 1.0f, -10.0f));
+	game_object[0]->setPosition(vec3(0.0f, 0.0f, 0.0f));
 
 	game_object[1] = new GameObject();
-	game_object[1]->setPosition(vec3(1.0f, 1.0f, -8.0f));
+	game_object[1]->setPosition(vec3(0.0f, 0.0f, -2.0f));
+
+	m_playerObject = new PlayerObject();
+	m_playerObject->setPosition(vec3(2.0f, 0.0f, -2.0f));
 }
 
 Game::~Game()
@@ -128,24 +131,13 @@ void Game::initialize()
 	glGenBuffers(1, &vbo);		// Generate Vertex Buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-	// Vertices (3) x,y,z , Colors (4) RGBA, UV/ST (2)
-
-	int countVERTICES = game_object[0]->getVertexCount();
-	int countCOLORS = game_object[0]->getColorCount();
-	int countUVS = game_object[0]->getUVCount();
-
 	glBufferData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS) + (2 * UVS)) * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
 
 	glGenBuffers(1, &vib); //Generate Vertex Index Buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vib);
 
-
-	int countINDICES = game_object[0]->getIndexCount();
-	// Indices to be drawn
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * INDICES * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
-	// NOTE: uniforms values must be used within Shader so that they 
-	// can be retreived
 	const char* vs_src =
 		"#version 400\n\r"
 		""
@@ -161,7 +153,7 @@ void Game::initialize()
 		"void main() {"
 		"	color = sv_color;"
 		"	uv = sv_uv;"
-		"	gl_Position = sv_mvp * vec4(sv_position, 1 );"
+		"	gl_Position = sv_mvp * vec4(sv_position, 1);"
 		"}"; //Vertex Shader Src
 
 	DEBUG_MSG("Setting Up Vertex Shader");
@@ -233,7 +225,6 @@ void Game::initialize()
 	}
 
 	// Set image data
-	// https://github.com/nothings/stb/blob/master/stb_image.h
 	img_data = stbi_load(filename.c_str(), &width, &height, &comp_count, 4);
 
 	if (img_data == NULL)
@@ -274,11 +265,6 @@ void Game::initialize()
 		100.0f					// Display Range Max : 100.0f unit
 		);
 
-	// Model matrix
-	model = mat4(
-		1.0f					// Identity Matrix
-		);
-
 	// Enable Depth Test
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -293,14 +279,8 @@ void Game::update()
 #if (DEBUG >= 2)
 	DEBUG_MSG("Updating...");
 #endif
-	// For mutiple objects (cubes) create multiple models
-	// To alter Camera modify view & projection
 
-	mvp = projection * m_camera.getWorldToViewMatrix() * model;
 
-	DEBUG_MSG(model[0].x);
-	DEBUG_MSG(model[0].y);
-	DEBUG_MSG(model[0].z);
 }
 
 void Game::render()
@@ -311,29 +291,6 @@ void Game::render()
 #endif
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	// Save current OpenGL render states
-	window.pushGLStates();
-
-	// Find mouse position using sf::Mouse
-	int x = Mouse::getPosition(window).x;
-	int y = Mouse::getPosition(window).y;
-
-	string hud = "Heads Up Display ["
-		+ string(toString(x))
-		+ "]["
-		+ string(toString(y))
-		+ "]";
-
-	Text text(hud, font);
-
-	text.setFillColor(sf::Color(255, 255, 255, 170));
-	text.setPosition(50.f, 50.f);
-
-	window.draw(text);
-
-	// Restore OpenGL render states
-	window.popGLStates();
 
 	// Rebind Buffers and then set SubData
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -361,52 +318,34 @@ void Game::render()
 	// VBO Data....vertices, colors and UV's appended
 	// Add the Vertices for all your GameOjects, Colors and UVS
 	
-	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), game_object[0]->getVertex());
-	//glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), vertices);
 	glBufferSubData(GL_ARRAY_BUFFER, 3 * VERTICES * sizeof(GLfloat), 4 * COLORS * sizeof(GLfloat), colors);
 	glBufferSubData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
 
-	// Set Active Texture .... 32 GL_TEXTURE0 .... GL_TEXTURE31
 	glActiveTexture(GL_TEXTURE0);
-	//glUniform1i(textureID, 0); // 0 .... 31
 
-	// Set pointers for each parameter (with appropriate starting positions)
-	glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	glVertexAttribPointer(colorID, 4, GL_FLOAT, GL_FALSE, 0, (VOID*)(3 * VERTICES * sizeof(GLfloat)));
-	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat)));
-	
-	// Enable Arrays
 	glEnableVertexAttribArray(positionID);
+	glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
 	glEnableVertexAttribArray(colorID);
+	glVertexAttribPointer(colorID, 4, GL_FLOAT, GL_FALSE, 0, (VOID*)(3 * VERTICES * sizeof(GLfloat)));
+
 	glEnableVertexAttribArray(uvID);
+	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat)));	
 
 	// Draw Element Arrays
-
 	for (int i = 0; i < 2; i++)
 	{
 		mvp = projection * m_camera.getWorldToViewMatrix() * game_object[i]->getModelToWorldMatrix();
 		glUniformMatrix4fv(mvpID,1,GL_FALSE, &mvp[0][0]);
 		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	}
+
+	mvp = projection * m_camera.getWorldToViewMatrix() * m_playerObject->getModelToWorldMatrix();
+	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
+	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+
 	window.display();
-
-	// Disable Arrays
-	glDisableVertexAttribArray(positionID);
-	glDisableVertexAttribArray(colorID);
-	glDisableVertexAttribArray(uvID);
-
-	// Unbind Buffers with 0 (Resets OpenGL States...important step)
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	// Reset the Shader Program to Use
-	glUseProgram(0);
-
-	// Check for OpenGL Error code
-	error = glGetError();
-	if (error != GL_NO_ERROR) {
-		DEBUG_MSG(error);
-	}
 }
 
 void Game::unload()

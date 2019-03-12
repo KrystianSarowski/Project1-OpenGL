@@ -2,7 +2,7 @@
 
 Camera::Camera()
 	: m_viewDirection(0.0f, 0.0f, 0.0f)
-	, m_position(0.0f, 10.0f, 10.0f)
+	, m_position(10.0f, 10.0f, 0.0f)
 	, UP(0.0f, 1.0f, 0.0f)
 {
 }

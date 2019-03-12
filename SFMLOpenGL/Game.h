@@ -5,22 +5,21 @@
 #include <sstream>
 
 #include <iostream>
-#include <GL/glew.h>
+#include <gl/glew.h>
 #include <GL/wglew.h>
-
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
-
 #include <Debug.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 #include <GameObject.h>
+#include <PlayerObject.h>
 #include <Camera.h>
 
 using namespace std;
@@ -37,6 +36,7 @@ public:
 private:
 
 	GameObject* game_object[2];
+	PlayerObject* m_playerObject;
 	RenderWindow window;
 	Clock clock;
 	Time time;
