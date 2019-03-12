@@ -1,6 +1,7 @@
 #include <GameObject.h>
 
-GameObject::GameObject() 
+GameObject::GameObject() :
+	rotation(1.0f, 0.0f, 0.0f)
 {
 	// Copy the Cube contents into GameObject
 	memcpy(this->vertex, vertices, sizeof(this->vertex));
@@ -21,6 +22,11 @@ GameObject::~GameObject()
 }
 
 vec3 GameObject::getPosition() { return this->position; }
+
+mat4 GameObject::getModelToWorldMatrix()
+{
+	return mat4(translate(glm::mat4(1.f), position) * rotate(glm::mat4(1.f), 0.0f, rotation));
+}
 void GameObject::setPosition(vec3 position) { this->position = position; }
 
 // Returns the first element of the Vertex array

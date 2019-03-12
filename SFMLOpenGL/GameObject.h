@@ -24,12 +24,16 @@ private:
 	GLfloat index[ARRAY_SIZE(indices)];
 
 	vec3 position;
+	vec3 rotation;
 
 public:
 	GameObject();
 	~GameObject();
 
 	vec3 getPosition();
+
+	mat4 getModelToWorldMatrix();
+
 	void setPosition(vec3 position);
 
 	// Returns the first element of the array

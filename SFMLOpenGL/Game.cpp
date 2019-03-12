@@ -1,6 +1,5 @@
 #include <Game.h>
 #include <Cube.h>
-#include <Easing.h>
 
 // Helper to convert Number to String for HUD
 template <typename T>
@@ -39,8 +38,7 @@ int comp_count;					// Component of texture
 
 unsigned char* img_data;		// image data
 
-mat4 mvp, projection, 
-		view, model;			// Model View Projection
+mat4 mvp, projection, model;	// Model View Projection
 
 //Camera position.
 vec3 cameraPos = vec3(0.0f, 10.0f, 10.0f);
@@ -98,30 +96,6 @@ void Game::run()
 			{
 				isRunning = false;
 			}
-
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-			{
-				view = translate(view, glm::vec3(-1, 0, 0));
-			}
-
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-			{
-				view = translate(view, glm::vec3(1, 0, 0));
-
-			}
-
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-			{
-				// Set Model Rotation
-				view = translate(view, glm::vec3(0, 0, 1));
-			}
-
-			else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-			{
-				// Set Model Rotation
-				view = translate(view, glm::vec3(0, 0, -1));
-			}
-
 		}
 		update();
 		render();
@@ -183,15 +157,11 @@ void Game::initialize()
 		"out vec2 uv;"
 		""
 		"uniform mat4 sv_mvp;"
-		"uniform float sv_x_offset;"
-		"uniform float sv_y_offset;"
-		"uniform float sv_z_offset;"
 		""
 		"void main() {"
 		"	color = sv_color;"
 		"	uv = sv_uv;"
-		//"	gl_Position = vec4(sv_position, 1);"
-		"	gl_Position = sv_mvp * vec4(sv_position.x + sv_x_offset, sv_position.y + sv_y_offset, sv_position.z + sv_z_offset, 1 );"
+		"	gl_Position = sv_mvp * vec4(sv_position, 1 );"
 		"}"; //Vertex Shader Src
 
 	DEBUG_MSG("Setting Up Vertex Shader");
@@ -304,13 +274,6 @@ void Game::initialize()
 		100.0f					// Display Range Max : 100.0f unit
 		);
 
-	// Camera Matrix
-	view = lookAt(
-		vec3(0.0f, 10.0f, 10.0f),	// Camera (x,y,z), in World Space
-		vec3(0.0f, 0.0f, 0.0f),		// Camera looking at origin
-		vec3(0.0f, 1.0f, 0.0f)		// 0.0f, 1.0f, 0.0f Look Down and 0.0f, -1.0f, 0.0f Look Up
-		);
-
 	// Model matrix
 	model = mat4(
 		1.0f					// Identity Matrix
@@ -332,8 +295,8 @@ void Game::update()
 #endif
 	// For mutiple objects (cubes) create multiple models
 	// To alter Camera modify view & projection
-	//view = lookAt(cameraPos, cameraLookingAt, cameraLookAtAngle);
-	mvp = projection * view * model;
+
+	mvp = projection * m_camera.getWorldToViewMatrix() * model;
 
 	DEBUG_MSG(model[0].x);
 	DEBUG_MSG(model[0].y);
@@ -395,15 +358,6 @@ void Game::render()
 	mvpID = glGetUniformLocation(progID, "sv_mvp");
 	if (mvpID < 0) { DEBUG_MSG("mvpID not found"); }
 
-	x_offsetID = glGetUniformLocation(progID, "sv_x_offset");
-	if (x_offsetID < 0) { DEBUG_MSG("x_offsetID not found"); }
-
-	y_offsetID = glGetUniformLocation(progID, "sv_y_offset");
-	if (y_offsetID < 0) { DEBUG_MSG("y_offsetID not found"); }
-
-	z_offsetID = glGetUniformLocation(progID, "sv_z_offset");
-	if (z_offsetID < 0) { DEBUG_MSG("z_offsetID not found"); };
-
 	// VBO Data....vertices, colors and UV's appended
 	// Add the Vertices for all your GameOjects, Colors and UVS
 	
@@ -411,9 +365,6 @@ void Game::render()
 	//glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), vertices);
 	glBufferSubData(GL_ARRAY_BUFFER, 3 * VERTICES * sizeof(GLfloat), 4 * COLORS * sizeof(GLfloat), colors);
 	glBufferSubData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
-
-	// Send transformation to shader mvp uniform [0][0] is start of array
-	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
 
 	// Set Active Texture .... 32 GL_TEXTURE0 .... GL_TEXTURE31
 	glActiveTexture(GL_TEXTURE0);
@@ -433,9 +384,8 @@ void Game::render()
 
 	for (int i = 0; i < 2; i++)
 	{
-		glUniform1f(x_offsetID, game_object[i]->getPosition().x);
-		glUniform1f(y_offsetID, game_object[i]->getPosition().y);
-		glUniform1f(z_offsetID, game_object[i]->getPosition().z);
+		mvp = projection * m_camera.getWorldToViewMatrix() * game_object[i]->getModelToWorldMatrix();
+		glUniformMatrix4fv(mvpID,1,GL_FALSE, &mvp[0][0]);
 		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	}
 	window.display();

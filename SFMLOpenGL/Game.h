@@ -21,6 +21,7 @@
 #include <stb_image.h>
 
 #include <GameObject.h>
+#include <Camera.h>
 
 using namespace std;
 using namespace sf;
@@ -34,6 +35,7 @@ public:
 	~Game();
 	void run();
 private:
+
 	GameObject* game_object[2];
 	RenderWindow window;
 	Clock clock;
@@ -42,6 +44,8 @@ private:
 	vec3 animation = vec3(0.0f);
 	float rotation = 0.0f;
 	bool isRunning = false;
+
+	Camera m_camera;
 	void initialize();
 	void update();
 	void render();
