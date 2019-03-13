@@ -1,9 +1,5 @@
 #pragma once
 
-#if !defined(ARRAY_SIZE)
-#define ARRAY_SIZE(x) (sizeof((x)) / sizeof((x)[0]))
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include <Cube.h>
@@ -17,18 +13,18 @@ using namespace glm;
 class EndGoal
 {
 private:
-	// Cube Elements
-	GLfloat vertex[ARRAY_SIZE(vertices)];
-	GLfloat uv[ARRAY_SIZE(uvs)];
-	GLfloat index[ARRAY_SIZE(indices)];
 
+	//Position of the end goal in the world.
 	vec3 m_position;
+
+	//Rotation of the end goal.
 	float m_rotation;
 
 public:
 	EndGoal();
 	~EndGoal();
 
+	//Collision rectangle ofr the end Goal;
 	sf::RectangleShape m_collisionBox;
 
 	void update();

@@ -165,6 +165,7 @@ xcopy $(GLEW_SDK)\bin\Release\Win32 $(TargetDir) /C /Y</Command>
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="PlayerObject.h" />
     <ClInclude Include="Pyramid.h" />
+    <ClInclude Include="PyramidObject.h" />
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
@@ -174,6 +175,7 @@ xcopy $(GLEW_SDK)\bin\Release\Win32 $(TargetDir) /C /Y</Command>
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="PlayerObject.cpp" />
+    <ClCompile Include="PyramidObject.cpp" />
     <ClCompile Include="stb_image.c" />
   </ItemGroup>
   <ItemGroup>

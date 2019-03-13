@@ -22,6 +22,7 @@
 #include <PlayerObject.h>
 #include <Camera.h>
 #include <EndGoal.h>
+#include <PyramidObject.h>
 
 using namespace std;
 using namespace sf;
@@ -36,29 +37,47 @@ public:
 	void run();
 private:
 
-	GameObject* game_object[200];
+	const int SCORE_GAIN{ 100 };
+	const int NUM_OF_GAME_OBJECTS{ 200 };
+	const int NUM_OF_PYRAMID_OBJECTS{ 45 };
+
+	//Array of gameObject cubes.
+	GameObject* m_gameObjects[200];
+
+	//Array of playerObject cubes.
 	PlayerObject* m_playerObject;
-	EndGoal* m_endGoal[3];
 
-	RenderWindow window;
-	Clock clock;
-	Time time;
-	bool isRunning = false;
+	//Array of endGoal cubes.
+	EndGoal* m_endGoalObjects[3];
 
+	//Array of pyramidObject pyramids.
+	PyramidObject* m_pyramidObject[45];
+
+	//Window to which the game draws to
+	RenderWindow m_window;
+
+	//Camera through which we see the world
 	Camera m_camera;
+
+	//The current score that the player has.
+	int m_score{ 0 };
+
+	//The difficulty increase.
+	float m_difficultyMultiplier{ 1.0f };
+
+	//Checks if the game is running or not.
+	bool m_isRunning{ false };
+
 	void initialize();
 	void update(sf::Time t_deltaTime);
 	void render();
 	void unload();
 
 	void resetGameWin();
+	void resetGameLose();
 
-	const int SCORE_GAIN{ 100 };
-
-	int m_numOfCubes{ 200 };
-	int m_score{ 0 };
-
-	float m_difficultyMultiplier{ 1.0f };
+	void bindPlayerTexture();
+	void bindObjectTexture();
 };
 
 #endif  // ! GAME_H

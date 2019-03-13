@@ -12,7 +12,7 @@ PlayerObject::PlayerObject()
 	m_collisionBox.setOrigin(1.0f, 1.0f);
 	m_collisionBox.setPosition(m_position.z, m_position.y);
 
-	m_velocity.z = -0.08f;
+	m_velocity.z = -0.25f;
 
 }
 
@@ -24,13 +24,13 @@ void PlayerObject::update(sf::Time t_deltaTime)
 {
 	m_previousPos = m_position;
 
-	vec3 acceleration(0.0f, -0.00098f, 0.0f);
+	vec3 acceleration(0.0f, -0.0098f, 0.0f);
 
 	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
 	{
 		if (m_velocity.y == 0.0f)
 		{
-			m_velocity.y = 0.1f;
+			m_velocity.y = 0.3f;
 		}
 	}
 
@@ -62,7 +62,7 @@ void PlayerObject::setPosition(vec3 position)
 
 void PlayerObject::changeVelocity(float t_multiplier)
 {
-	m_velocity.z = -0.08f * t_multiplier;
+	m_velocity.z = -0.25f * t_multiplier;
 }
 
 void PlayerObject::onGround()

@@ -1,10 +1,6 @@
 #ifndef GAME_OBJECT_H
 #define GAME_OBJECT_H
 
-#if !defined(ARRAY_SIZE)
-#define ARRAY_SIZE(x) (sizeof((x)) / sizeof((x)[0]))
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include <Cube.h>

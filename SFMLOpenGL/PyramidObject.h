@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <Cube.h>
+#include <Pyramid.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,35 +10,23 @@
 
 using namespace glm;
 
-class PlayerObject
+class PyramidObject
 {
 private:
-	// Cube Elements
 
-	vec3 m_previousPos;
 	vec3 m_position;
 	vec3 m_rotation;
 
-	vec3 m_velocity;
-
 public:
-	PlayerObject();
-	~PlayerObject();
+	PyramidObject();
+	~PyramidObject();
 
 	sf::RectangleShape m_collisionBox;
 
-	void update(sf::Time t_deltaTime);
-
 	vec3 getPosition();
-
-	vec3 getPreviousPos();
 
 	mat4 getModelToWorldMatrix();
 
 	void setPosition(vec3 position);
-
-	void changeVelocity( float t_multiplier);
-
-	void onGround();
 };
 
