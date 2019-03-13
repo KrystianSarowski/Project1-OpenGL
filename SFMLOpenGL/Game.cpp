@@ -70,7 +70,7 @@ Game::Game(sf::ContextSettings settings) :
 	m_playerObject->setPosition(vec3(0.0f, 2.0f, 0.0f));
 
 	m_endGoal = new EndGoal();
-	m_endGoal->setPosition(vec3(0.0f, 2.5f, -2.2f));
+	m_endGoal->setPosition(vec3(0.0f, 2.5f, -200.0f));
 }
 
 Game::~Game()
@@ -299,7 +299,7 @@ void Game::update(sf::Time t_deltaTime)
 
 	if (m_endGoal->m_collisionBox.getGlobalBounds().intersects(m_playerObject->m_collisionBox.getGlobalBounds()))
 	{
-		std::cout << "Oh Hi Mark!" << std::endl;
+		m_playerObject->setPosition(vec3(0.0f, 2.0f, 0.0f));
 	}
 }
 
@@ -326,9 +326,6 @@ void Game::render()
 
 	mvpID = glGetUniformLocation(progID, "sv_mvp");
 	if (mvpID < 0) { DEBUG_MSG("mvpID not found"); }
-
-	// VBO Data....vertices, colors and UV's appended
-	// Add the Vertices for all your GameOjects, Colors and UVS
 	
 	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), vertices);
 	glBufferSubData(GL_ARRAY_BUFFER, (3 * VERTICES) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);

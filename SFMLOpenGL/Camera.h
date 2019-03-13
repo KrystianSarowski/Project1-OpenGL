@@ -1,6 +1,7 @@
 #pragma once
 #include <glm\glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <SFML/Graphics.hpp>
 
 class Camera
 {
@@ -17,5 +18,8 @@ private:
 	glm::vec3 m_viewDirection; 
 	glm::vec3 m_offSet;
 	const glm::vec3 UP;
+
+	bool m_rotate;
+	bool m_rotated;
 };
 
