@@ -122,10 +122,6 @@ void Game::initialize()
 
 	if (!(!glewInit())) { DEBUG_MSG("glewInit() failed"); }
 
-	// Copy UV's to all faces
-	for (int i = 1; i < 6; i++)
-		memcpy(&uvs[i * 4 * 2], &uvs[0], 2 * 4 * sizeof(GLfloat));
-
 	DEBUG_MSG(glGetString(GL_VENDOR));
 	DEBUG_MSG(glGetString(GL_RENDERER));
 	DEBUG_MSG(glGetString(GL_VERSION));
@@ -184,7 +180,7 @@ void Game::initialize()
 		"out vec4 fColor;"
 		""
 		"void main() {"
-		"	fColor = texture2D(f_texture, uv);"
+		"	fColor = texture2D(f_texture, uv.st);"
 		""
 		"}"; //Fragment Shader Src
 
@@ -236,8 +232,8 @@ void Game::initialize()
 	glBindTexture(GL_TEXTURE_2D, to[0]);
 
 	// Wrap around
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	// Filtering
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
@@ -245,16 +241,15 @@ void Game::initialize()
 
 	// Bind to OpenGL
 	glTexImage2D(
-		GL_TEXTURE_2D,			// 2D Texture Image
-		0,						// Mipmapping Level 
-		GL_RGBA,				// GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA, GL_RGB, GL_BGR, GL_RGBA 
-		width,					// Width
-		height,					// Height
-		0,						// Border
-		GL_RGBA,				// Bitmap
-		GL_UNSIGNED_BYTE,		// Specifies Data type of image data
-		img_data				// Image Data
-		);
+		GL_TEXTURE_2D,	//2D Texture Image
+		0,				//Mipmapping Level 
+		GL_RGBA,		//GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA, GL_RGB, GL_BGR, GL_RGBA 
+		width,			//Width
+		height,			//Height
+		0,				//Border
+		GL_RGBA,		//Bitmap
+		GL_UNSIGNED_BYTE, 
+		img_data);
 
 	// Projection Matrix 
 	projection = perspective(
@@ -331,6 +326,7 @@ void Game::render()
 	glBufferSubData(GL_ARRAY_BUFFER, (3 * VERTICES) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
 
 	glActiveTexture(GL_TEXTURE0);
+	glUniform1i(textureID, 0);
 
 	glEnableVertexAttribArray(positionID);
 	glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, 0);

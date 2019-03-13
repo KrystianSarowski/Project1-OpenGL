@@ -38,20 +38,5 @@ public:
 	mat4 getModelToWorldMatrix();
 
 	void setPosition(vec3 position);
-
-	// Returns the first element of the array
-	GLfloat* getVertex();
-	// 3 Vertices
-	int getVertexCount();
-
-	// Returns the first element of the array
-	GLfloat* getUV();
-	// 3 Colors RGB
-	int getUVCount();
-
-	// Returns the first element of the array
-	GLfloat* getIndex();
-	// 3 Colors RGB
-	int getIndexCount();
 };
 

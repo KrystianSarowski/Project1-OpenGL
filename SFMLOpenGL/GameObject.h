@@ -18,10 +18,6 @@ using namespace glm;
 class GameObject
 {
 private:
-	// Cube Elements
-	GLfloat vertex[ARRAY_SIZE(vertices)];
-	GLfloat uv[ARRAY_SIZE(uvs)];
-	GLfloat index[ARRAY_SIZE(indices)];
 
 	vec3 m_position;
 	vec3 m_rotation;
@@ -37,21 +33,6 @@ public:
 	mat4 getModelToWorldMatrix();
 
 	void setPosition(vec3 position);
-
-	// Returns the first element of the array
-	GLfloat* getVertex();
-	// 3 Vertices
-	int getVertexCount();
-
-	// Returns the first element of the array
-	GLfloat* getUV();
-	// 3 Colors RGB
-	int getUVCount();
-
-	// Returns the first element of the array
-	GLfloat* getIndex();
-	// 3 Colors RGB
-	int getIndexCount();
 };
 
 #endif // !GAME_OBJECT_H

@@ -4,15 +4,7 @@ PlayerObject::PlayerObject()
 	: m_rotation(1.0f, 0.0f, 0.0f)
 	, m_velocity(0.0f, 0.0f, 0.0f)
 {
-	// Copy the Cube contents into GameObject
-	memcpy(vertex, vertices, sizeof(vertex));
-	memcpy(uv, uvs, sizeof(uv));
 
-	// Copy UV's to all faces
-	for (int i = 1; i < 6; i++)
-		memcpy(&uv[i * 4 * 2], &uv[0], 2 * 4 * sizeof(GLfloat));
-
-	memcpy(index, indices, sizeof(index));
 
 	m_position = vec3(0.0f, 0.0f, 0.0f);
 
@@ -73,17 +65,4 @@ void PlayerObject::onGround()
 	m_velocity.y = 0.0f;
 }
 
-// Returns the first element of the Vertex array
-GLfloat* PlayerObject::getVertex() { return vertex; }
-// 3 Vertices
-int PlayerObject::getVertexCount() { return ARRAY_SIZE(vertex) / 3; }
 
-// Returns the first element of the UV array
-GLfloat* PlayerObject::getUV() { return uv; }
-// 3 Colors RGB
-int PlayerObject::getUVCount() { return ARRAY_SIZE(uv); }
-
-// Returns the first element of the Index array
-GLfloat* PlayerObject::getIndex() { return index; }
-// 3 Colors RGB
-int PlayerObject::getIndexCount() { return ARRAY_SIZE(index) / 3; }
