@@ -11,6 +11,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <SFML/Graphics.hpp>
 
 using namespace glm;
 
@@ -19,7 +20,6 @@ class GameObject
 private:
 	// Cube Elements
 	GLfloat vertex[ARRAY_SIZE(vertices)];
-	GLfloat color[ARRAY_SIZE(colors)];
 	GLfloat uv[ARRAY_SIZE(uvs)];
 	GLfloat index[ARRAY_SIZE(indices)];
 
@@ -29,6 +29,8 @@ private:
 public:
 	GameObject();
 	~GameObject();
+
+	sf::RectangleShape m_collisionBox;
 
 	vec3 getPosition();
 
@@ -40,11 +42,6 @@ public:
 	GLfloat* getVertex();
 	// 3 Vertices
 	int getVertexCount();
-
-	// Returns the first element of the array
-	GLfloat* getColor();
-	// 3 Colors RGB
-	int getColorCount();
 
 	// Returns the first element of the array
 	GLfloat* getUV();

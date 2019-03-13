@@ -35,7 +35,7 @@ public:
 	void run();
 private:
 
-	GameObject* game_object[2];
+	GameObject* game_object[20];
 	PlayerObject* m_playerObject;
 	RenderWindow window;
 	Clock clock;
@@ -47,9 +47,11 @@ private:
 
 	Camera m_camera;
 	void initialize();
-	void update();
+	void update(sf::Time t_deltaTime);
 	void render();
 	void unload();
+
+	int numOfCubes{ 20 };
 };
 
 #endif  // ! GAME_H

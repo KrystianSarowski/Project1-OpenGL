@@ -30,7 +30,7 @@ GLenum	error;		// OpenGL Error Code
 
 
 //Please see .//Assets//Textures// for more textures
-const string filename = ".//Assets//Textures//grid_wip.tga";
+const string filename = ".//Assets//Textures//MyCube.tga";
 
 int width;						// Width of texture
 int height;						// Height of texture
@@ -40,14 +40,7 @@ unsigned char* img_data;		// image data
 
 mat4 mvp, projection, model;	// Model View Projection
 
-//Camera position.
-vec3 cameraPos = vec3(0.0f, 10.0f, 10.0f);
-vec3 cameraLookingAt = vec3(0.0f, 0.0f, 0.0f);
-vec3 cameraLookAtAngle = vec3(0.0f, 1.0f, 0.0f);
-
 Font font;						// Game font
-
-float x_offset, y_offset, z_offset; // offset on screen (Vertex Shader)
 
 Game::Game() : 
 	window(VideoMode(800, 600), 
@@ -61,14 +54,20 @@ Game::Game(sf::ContextSettings settings) :
 	sf::Style::Default, 
 	settings)
 {
-	game_object[0] = new GameObject();
-	game_object[0]->setPosition(vec3(0.0f, 0.0f, 0.0f));
+	for (int i = 0; i < numOfCubes - 2; i++)
+	{
+		game_object[i] = new GameObject();
+		game_object[i]->setPosition(vec3(0.0f, 0.0f, i * -2.0f));
+	}
 
-	game_object[1] = new GameObject();
-	game_object[1]->setPosition(vec3(0.0f, 0.0f, -2.0f));
+	game_object[numOfCubes - 2] = new GameObject();
+	game_object[numOfCubes - 2]->setPosition(vec3(0.0f, 4.0f, -4.0f));
+
+	game_object[numOfCubes - 1] = new GameObject();
+	game_object[numOfCubes - 1]->setPosition(vec3(0.0f, 4.0f, -6.0f));
 
 	m_playerObject = new PlayerObject();
-	m_playerObject->setPosition(vec3(2.0f, 0.0f, -2.0f));
+	m_playerObject->setPosition(vec3(0.0f, 2.0f, 0.0f));
 }
 
 Game::~Game()
@@ -81,18 +80,16 @@ void Game::run()
 
 	initialize();
 
+	sf::Clock clock;
+
+	const float FPS = 60.0f;
+	const sf::Time timePerFrame = sf::seconds(1.0f / 60.0f);
+	sf::Time timeSinceLastUpdate = sf::Time::Zero;
+
 	Event event;
 
-	float rotation = 0.01f;
-	float start_value = 0.0f;
-	float end_value = 1.0f;
-
-	while (isRunning){
-
-#if (DEBUG >= 2)
-		DEBUG_MSG("Game running...");
-#endif
-
+	while (isRunning)
+	{
 		while (window.pollEvent(event))
 		{
 			if (event.type == Event::Closed)
@@ -100,15 +97,18 @@ void Game::run()
 				isRunning = false;
 			}
 		}
-		update();
+
+		//Get the time since last update and restart the clock.
+		timeSinceLastUpdate += clock.restart();
+		//Update every 60th of a second.
+		if (timeSinceLastUpdate > timePerFrame)
+		{
+			update(timeSinceLastUpdate);
+		}
 		render();
 	}
 
-#if (DEBUG >= 2)
-	DEBUG_MSG("Calling Cleanup...");
-#endif
 	unload();
-
 }
 
 void Game::initialize()
@@ -131,7 +131,7 @@ void Game::initialize()
 	glGenBuffers(1, &vbo);		// Generate Vertex Buffer
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-	glBufferData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS) + (2 * UVS)) * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (2 * UVS)) * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
 
 	glGenBuffers(1, &vib); //Generate Vertex Index Buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vib);
@@ -142,16 +142,13 @@ void Game::initialize()
 		"#version 400\n\r"
 		""
 		"in vec3 sv_position;"
-		"in vec4 sv_color;"
 		"in vec2 sv_uv;"
 		""
-		"out vec4 color;"
 		"out vec2 uv;"
 		""
 		"uniform mat4 sv_mvp;"
 		""
 		"void main() {"
-		"	color = sv_color;"
 		"	uv = sv_uv;"
 		"	gl_Position = sv_mvp * vec4(sv_position, 1);"
 		"}"; //Vertex Shader Src
@@ -179,13 +176,12 @@ void Game::initialize()
 		""
 		"uniform sampler2D f_texture;"
 		""
-		"in vec4 color;"
 		"in vec2 uv;"
 		""
 		"out vec4 fColor;"
 		""
 		"void main() {"
-		"	fColor = color - texture2D(f_texture, uv);"
+		"	fColor = texture2D(f_texture, uv);"
 		""
 		"}"; //Fragment Shader Src
 
@@ -274,22 +270,34 @@ void Game::initialize()
 	font.loadFromFile(".//Assets//Fonts//BBrick.ttf");
 }
 
-void Game::update()
+void Game::update(sf::Time t_deltaTime)
 {
-#if (DEBUG >= 2)
-	DEBUG_MSG("Updating...");
-#endif
 
+	m_playerObject->update(t_deltaTime);
+	m_camera.update(m_playerObject->getPosition());
+
+	bool onGround = false;
+
+	for (int i = 0; i < numOfCubes; i++)
+	{
+		if (game_object[i]->m_collisionBox.getGlobalBounds().intersects(m_playerObject->m_collisionBox.getGlobalBounds()))
+		{
+			if (m_playerObject->getPreviousPos().y > game_object[i]->getPosition().y + 1.0f)
+			{
+				m_playerObject->setPosition(vec3(m_playerObject->getPosition().x, game_object[i]->getPosition().y + 2.0f, m_playerObject->getPosition().z));
+				m_playerObject->onGround();
+			}
+			else
+			{
+				m_playerObject->setPosition(vec3(m_playerObject->getPosition().x, m_playerObject->getPosition().y, game_object[i]->getPosition().z + 2.0f));
+			}
+		}
+	}
 
 }
 
 void Game::render()
 {
-
-#if (DEBUG >= 2)
-	DEBUG_MSG("Render Loop...");
-#endif
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Rebind Buffers and then set SubData
@@ -302,9 +310,6 @@ void Game::render()
 	// Find variables within the shader
 	positionID = glGetAttribLocation(progID, "sv_position");
 	if (positionID < 0) { DEBUG_MSG("positionID not found"); }
-
-	colorID = glGetAttribLocation(progID, "sv_color");
-	if (colorID < 0) { DEBUG_MSG("colorID not found"); }
 
 	uvID = glGetAttribLocation(progID, "sv_uv");
 	if (uvID < 0) { DEBUG_MSG("uvID not found"); }
@@ -319,25 +324,21 @@ void Game::render()
 	// Add the Vertices for all your GameOjects, Colors and UVS
 	
 	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), vertices);
-	glBufferSubData(GL_ARRAY_BUFFER, 3 * VERTICES * sizeof(GLfloat), 4 * COLORS * sizeof(GLfloat), colors);
-	glBufferSubData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
+	glBufferSubData(GL_ARRAY_BUFFER, (3 * VERTICES) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
 
 	glActiveTexture(GL_TEXTURE0);
 
 	glEnableVertexAttribArray(positionID);
 	glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-	glEnableVertexAttribArray(colorID);
-	glVertexAttribPointer(colorID, 4, GL_FLOAT, GL_FALSE, 0, (VOID*)(3 * VERTICES * sizeof(GLfloat)));
-
 	glEnableVertexAttribArray(uvID);
-	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * VERTICES) + (4 * COLORS)) * sizeof(GLfloat)));	
+	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * VERTICES)) * sizeof(GLfloat)));	
 
 	// Draw Element Arrays
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < numOfCubes; i++)
 	{
 		mvp = projection * m_camera.getWorldToViewMatrix() * game_object[i]->getModelToWorldMatrix();
-		glUniformMatrix4fv(mvpID,1,GL_FALSE, &mvp[0][0]);
+		glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
 		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 	}
 
@@ -350,9 +351,6 @@ void Game::render()
 
 void Game::unload()
 {
-#if (DEBUG >= 2)
-	DEBUG_MSG("Cleaning up...");
-#endif
 	glDetachShader(progID, vsid);	// Shader could be used with more than one progID
 	glDetachShader(progID, fsid);	// ..
 	glDeleteShader(vsid);			// Delete Vertex Shader
