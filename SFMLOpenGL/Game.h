@@ -21,6 +21,7 @@
 #include <GameObject.h>
 #include <PlayerObject.h>
 #include <Camera.h>
+#include <EndGoal.h>
 
 using namespace std;
 using namespace sf;
@@ -35,8 +36,10 @@ public:
 	void run();
 private:
 
-	GameObject* game_object[20];
+	GameObject* game_object[200];
 	PlayerObject* m_playerObject;
+	EndGoal* m_endGoal;
+
 	RenderWindow window;
 	Clock clock;
 	Time time;
@@ -51,7 +54,7 @@ private:
 	void render();
 	void unload();
 
-	int numOfCubes{ 20 };
+	int numOfCubes{ 200 };
 };
 
 #endif  // ! GAME_H

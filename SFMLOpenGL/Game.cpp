@@ -68,6 +68,9 @@ Game::Game(sf::ContextSettings settings) :
 
 	m_playerObject = new PlayerObject();
 	m_playerObject->setPosition(vec3(0.0f, 2.0f, 0.0f));
+
+	m_endGoal = new EndGoal();
+	m_endGoal->setPosition(vec3(0.0f, 2.5f, -2.2f));
 }
 
 Game::~Game()
@@ -272,9 +275,9 @@ void Game::initialize()
 
 void Game::update(sf::Time t_deltaTime)
 {
-
 	m_playerObject->update(t_deltaTime);
 	m_camera.update(m_playerObject->getPosition());
+	m_endGoal->update();
 
 	bool onGround = false;
 
@@ -294,6 +297,10 @@ void Game::update(sf::Time t_deltaTime)
 		}
 	}
 
+	if (m_endGoal->m_collisionBox.getGlobalBounds().intersects(m_playerObject->m_collisionBox.getGlobalBounds()))
+	{
+		std::cout << "Oh Hi Mark!" << std::endl;
+	}
 }
 
 void Game::render()
@@ -343,6 +350,10 @@ void Game::render()
 	}
 
 	mvp = projection * m_camera.getWorldToViewMatrix() * m_playerObject->getModelToWorldMatrix();
+	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
+	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+
+	mvp = projection * m_camera.getWorldToViewMatrix() * m_endGoal->getModelToWorldMatrix();
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
 	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 

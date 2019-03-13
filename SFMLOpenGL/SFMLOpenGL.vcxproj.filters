@@ -45,6 +45,9 @@
     <ClInclude Include="PlayerObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="EndGoal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -63,6 +66,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="PlayerObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EndGoal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
