@@ -40,6 +40,8 @@ public:
 
 	void setPosition(vec3 position);
 
+	void changeVelocity( float t_multiplier);
+
 	void onGround();
 };
 

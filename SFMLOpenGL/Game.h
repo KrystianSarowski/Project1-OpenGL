@@ -38,14 +38,11 @@ private:
 
 	GameObject* game_object[200];
 	PlayerObject* m_playerObject;
-	EndGoal* m_endGoal;
+	EndGoal* m_endGoal[3];
 
 	RenderWindow window;
 	Clock clock;
 	Time time;
-	bool animate = false;
-	vec3 animation = vec3(0.0f);
-	float rotation = 0.0f;
 	bool isRunning = false;
 
 	Camera m_camera;
@@ -54,7 +51,14 @@ private:
 	void render();
 	void unload();
 
-	int numOfCubes{ 200 };
+	void resetGameWin();
+
+	const int SCORE_GAIN{ 100 };
+
+	int m_numOfCubes{ 200 };
+	int m_score{ 0 };
+
+	float m_difficultyMultiplier{ 1.0f };
 };
 
 #endif  // ! GAME_H

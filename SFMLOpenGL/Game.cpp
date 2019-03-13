@@ -54,23 +54,102 @@ Game::Game(sf::ContextSettings settings) :
 	sf::Style::Default, 
 	settings)
 {
-	for (int i = 0; i < numOfCubes - 2; i++)
+	for (int i = 0; i < m_numOfCubes - 20; i++)
 	{
 		game_object[i] = new GameObject();
 		game_object[i]->setPosition(vec3(0.0f, 0.0f, i * -2.0f));
 	}
 
-	game_object[numOfCubes - 2] = new GameObject();
-	game_object[numOfCubes - 2]->setPosition(vec3(0.0f, 4.0f, -4.0f));
+	int index = 20;
 
-	game_object[numOfCubes - 1] = new GameObject();
-	game_object[numOfCubes - 1]->setPosition(vec3(0.0f, 4.0f, -6.0f));
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 4.0f, -14.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 6.0f, -16.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 10.0f, -18.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 10.0f, -24.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 10.0f, -30.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 10.0f, -36.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 8.0f, -40.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 6.0f, -44.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 4.0f, -48.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 4.0f, -100.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 6.0f, -104.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 8.0f, -108.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 10.0f, -112.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 12.0f, -116.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 14.0f, -120.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 16.0f, -124.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 16.0f, -130.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 12.0f, -136.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 8.0f, -142.0f));
+	index--;
+
+	game_object[m_numOfCubes - index] = new GameObject();
+	game_object[m_numOfCubes - index]->setPosition(vec3(0.0f, 4.0f, -148.0f));
+	index--;
 
 	m_playerObject = new PlayerObject();
 	m_playerObject->setPosition(vec3(0.0f, 2.0f, 0.0f));
 
-	m_endGoal = new EndGoal();
-	m_endGoal->setPosition(vec3(0.0f, 2.5f, -200.0f));
+	for (int i = 0; i < 3; i++)
+	{
+		m_endGoal[i] = new EndGoal();
+		m_endGoal[i]->setPosition(vec3(0.0f, 2.5f * (i + 1), -300.0f));
+	}
 }
 
 Game::~Game()
@@ -265,18 +344,25 @@ void Game::initialize()
 	glEnable(GL_CULL_FACE);
 
 	// Load Font
-	font.loadFromFile(".//Assets//Fonts//BBrick.ttf");
+	if (!font.loadFromFile(".//Assets//Fonts//BBrick.ttf"))
+	{
+		std::cout << "Font not loaded" << std::endl;
+	}
 }
 
 void Game::update(sf::Time t_deltaTime)
 {
 	m_playerObject->update(t_deltaTime);
 	m_camera.update(m_playerObject->getPosition());
-	m_endGoal->update();
+	
+	for (int i = 0; i < 3; i++)
+	{
+		m_endGoal[i]->update();
+	}
 
 	bool onGround = false;
 
-	for (int i = 0; i < numOfCubes; i++)
+	for (int i = 0; i < m_numOfCubes; i++)
 	{
 		if (game_object[i]->m_collisionBox.getGlobalBounds().intersects(m_playerObject->m_collisionBox.getGlobalBounds()))
 		{
@@ -292,15 +378,33 @@ void Game::update(sf::Time t_deltaTime)
 		}
 	}
 
-	if (m_endGoal->m_collisionBox.getGlobalBounds().intersects(m_playerObject->m_collisionBox.getGlobalBounds()))
+	for (int i = 0; i < 3; i++)
 	{
-		m_playerObject->setPosition(vec3(0.0f, 2.0f, 0.0f));
+		if (m_endGoal[i]->m_collisionBox.getGlobalBounds().intersects(m_playerObject->m_collisionBox.getGlobalBounds()))
+		{
+			resetGameWin();
+			break;
+		}
 	}
 }
 
 void Game::render()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	// Save current OpenGL render states
+	window.pushGLStates();
+
+	string hud = "Heads Up Display [" + string(toString(m_score)) + "]";
+
+	Text text(hud, font);
+	text.setFillColor(sf::Color(255, 255, 255, 170));
+	text.setPosition(50.f, 50.f);
+
+	//window.draw(text);
+
+	// Restore OpenGL render states		
+	window.popGLStates();
 
 	// Rebind Buffers and then set SubData
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -335,7 +439,7 @@ void Game::render()
 	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * VERTICES)) * sizeof(GLfloat)));	
 
 	// Draw Element Arrays
-	for (int i = 0; i < numOfCubes; i++)
+	for (int i = 0; i < m_numOfCubes; i++)
 	{
 		mvp = projection * m_camera.getWorldToViewMatrix() * game_object[i]->getModelToWorldMatrix();
 		glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
@@ -346,9 +450,12 @@ void Game::render()
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
 	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
 
-	mvp = projection * m_camera.getWorldToViewMatrix() * m_endGoal->getModelToWorldMatrix();
-	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
-	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+	for (int i = 0; i < 3; i++)
+	{
+		mvp = projection * m_camera.getWorldToViewMatrix() * m_endGoal[i]->getModelToWorldMatrix();
+		glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
+		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+	}
 
 	window.display();
 }
@@ -363,5 +470,14 @@ void Game::unload()
 	glDeleteBuffers(1, &vbo);		// Delete Vertex Buffer
 	glDeleteBuffers(1, &vib);		// Delete Vertex Index Buffer
 	stbi_image_free(img_data);		// Free image stbi_image_free(..)
+}
+
+void Game::resetGameWin()
+{
+	m_playerObject->setPosition(vec3(0.0f, 2.0f, 0.0f));
+	m_playerObject->changeVelocity(m_difficultyMultiplier);
+	m_score += SCORE_GAIN * m_difficultyMultiplier;
+
+	m_difficultyMultiplier += 0.1f;
 }
 

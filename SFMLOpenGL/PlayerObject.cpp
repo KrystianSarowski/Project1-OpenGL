@@ -60,6 +60,11 @@ void PlayerObject::setPosition(vec3 position)
 	m_collisionBox.setPosition(m_position.z, m_position.y);
 }
 
+void PlayerObject::changeVelocity(float t_multiplier)
+{
+	m_velocity.z = -0.08f * t_multiplier;
+}
+
 void PlayerObject::onGround()
 {
 	m_velocity.y = 0.0f;
