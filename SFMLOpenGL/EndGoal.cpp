@@ -34,6 +34,7 @@ mat4 EndGoal::getModelToWorldMatrix()
 {
 	return mat4(translate(glm::mat4(1.f), m_position) * rotate(glm::mat4(1.f), m_rotation, vec3(1.0f, 0.0f, 0.0f)));
 }
+
 void EndGoal::setPosition(vec3 position)
 {
 	m_position = position;

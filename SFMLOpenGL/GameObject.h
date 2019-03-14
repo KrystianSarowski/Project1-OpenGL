@@ -15,7 +15,10 @@ class GameObject
 {
 private:
 
+	//Position of the GameObject in the world.
 	vec3 m_position;
+
+	//Rotation of the GameObject.
 	vec3 m_rotation;
 
 public:

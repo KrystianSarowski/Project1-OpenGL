@@ -14,7 +14,10 @@ class PyramidObject
 {
 private:
 
+	//Position of the PyramidObject in the world.
 	vec3 m_position;
+
+	//Rotation of the PyramidObject.
 	vec3 m_rotation;
 
 public:

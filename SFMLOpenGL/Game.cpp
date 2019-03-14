@@ -233,12 +233,12 @@ void Game::initialize()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
 	//Take up memory to store all the vetices and uvs for both cube and pyramid.
-	glBufferData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (2 * UVS) + (3 * PYRAMID_VERTICES) + (2 * PYRAMID_UVS)) * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, ((3 * CUBE_VERTICES) + (2 * CUBE_UVS) + (3 * PYRAMID_VERTICES) + (2 * PYRAMID_UVS)) * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
 
 	glGenBuffers(1, &vib); //Generate Vertex Index Buffer
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vib);
 
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (3 * INDICES + 3 * PYRAMID_INDICES) * sizeof(GLuint), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (3 * CUBE_INDICES + 3 * PYRAMID_INDICES) * sizeof(GLuint), indices, GL_STATIC_DRAW);
 
 	const char* vs_src =
 		"#version 400\n\r"
@@ -471,18 +471,19 @@ void Game::render()
 	if (mvpID < 0) { DEBUG_MSG("mvpID not found"); }
 
 	//We are now Using the part of memory that has the pyramid in it.
-	glBufferSubData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (2 * UVS)) * sizeof(GLfloat), 3 * PYRAMID_VERTICES * sizeof(GLfloat), pyramidVertices);
-	glBufferSubData(GL_ARRAY_BUFFER, ((3 * VERTICES) + (2 * UVS) + (3 * PYRAMID_VERTICES)) * sizeof(GLfloat), 2 * PYRAMID_UVS * sizeof(GLfloat), pyramidUvs);
+	glBufferSubData(GL_ARRAY_BUFFER, ((3 * CUBE_VERTICES) + (2 * CUBE_UVS)) * sizeof(GLfloat), 3 * PYRAMID_VERTICES * sizeof(GLfloat), pyramidVertices);
+	glBufferSubData(GL_ARRAY_BUFFER, ((3 * CUBE_VERTICES) + (2 * CUBE_UVS) + (3 * PYRAMID_VERTICES)) * sizeof(GLfloat), 2 * PYRAMID_UVS * sizeof(GLfloat), pyramidUvs);
 
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(textureID, 0);
 
 	glEnableVertexAttribArray(positionID);
-	glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * VERTICES) + (2 * UVS)) * sizeof(GLfloat)));
+	glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * CUBE_VERTICES) + (2 * CUBE_UVS)) * sizeof(GLfloat)));
 
 	glEnableVertexAttribArray(uvID);
-	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * VERTICES) + (2 * UVS) + (3 * PYRAMID_VERTICES)) * sizeof(GLfloat)));
+	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * CUBE_VERTICES) + (2 * CUBE_UVS) + (3 * PYRAMID_VERTICES)) * sizeof(GLfloat)));
 
+	//Draw pyramidObject pyramids.
 	for (int i = 0; i < NUM_OF_PYRAMID_OBJECTS; i++)
 	{
 		mvp = projection * m_camera.getWorldToViewMatrix() * m_pyramidObject[i]->getModelToWorldMatrix();
@@ -491,8 +492,8 @@ void Game::render()
 	}
 	
 	//We are now Using the part of memory that has the cube in it.
-	glBufferSubData(GL_ARRAY_BUFFER, 0 * VERTICES * sizeof(GLfloat), 3 * VERTICES * sizeof(GLfloat), vertices);
-	glBufferSubData(GL_ARRAY_BUFFER, (3 * VERTICES) * sizeof(GLfloat), 2 * UVS * sizeof(GLfloat), uvs);
+	glBufferSubData(GL_ARRAY_BUFFER, 0 * CUBE_VERTICES * sizeof(GLfloat), 3 * CUBE_VERTICES * sizeof(GLfloat), vertices);
+	glBufferSubData(GL_ARRAY_BUFFER, (3 * CUBE_VERTICES) * sizeof(GLfloat), 2 * CUBE_UVS * sizeof(GLfloat), uvs);
 
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(textureID, 0);
@@ -501,26 +502,28 @@ void Game::render()
 	glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
 	glEnableVertexAttribArray(uvID);
-	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * VERTICES)) * sizeof(GLfloat)));	
+	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * CUBE_VERTICES)) * sizeof(GLfloat)));	
 
-	// Draw Element Arrays
+	//Draw gameObject cubes.
 	for (int i = 0; i < NUM_OF_GAME_OBJECTS; i++)
 	{
 		mvp = projection * m_camera.getWorldToViewMatrix() * m_gameObjects[i]->getModelToWorldMatrix();
 		glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
-		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+		glDrawElements(GL_TRIANGLES, 3 * CUBE_INDICES, GL_UNSIGNED_INT, NULL);
 	}
 
+	//Draw endGoal cubes.
 	for (int i = 0; i < 3; i++)
 	{
 		mvp = projection * m_camera.getWorldToViewMatrix() * m_endGoalObjects[i]->getModelToWorldMatrix();
 		glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
-		glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+		glDrawElements(GL_TRIANGLES, 3 * CUBE_INDICES, GL_UNSIGNED_INT, NULL);
 	}
 
+	//Draw playerObject cubes.
 	mvp = projection * m_camera.getWorldToViewMatrix() * m_playerObject->getModelToWorldMatrix();
 	glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
-	glDrawElements(GL_TRIANGLES, 3 * INDICES, GL_UNSIGNED_INT, NULL);
+	glDrawElements(GL_TRIANGLES, 3 * CUBE_INDICES, GL_UNSIGNED_INT, NULL);
 
 	m_window.display();
 }

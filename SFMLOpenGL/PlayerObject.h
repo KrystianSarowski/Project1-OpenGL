@@ -13,12 +13,17 @@ using namespace glm;
 class PlayerObject
 {
 private:
-	// Cube Elements
 
+	//Previous position of the PlayerObject in the world.
 	vec3 m_previousPos;
+
+	//Position of the PlayerObject in the world.
 	vec3 m_position;
+
+	//Rotation of the PlayerObject.
 	vec3 m_rotation;
 
+	//Velocity vector of PlayerObject.
 	vec3 m_velocity;
 
 public:

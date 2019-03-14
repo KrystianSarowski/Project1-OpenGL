@@ -41,6 +41,7 @@ static const GLfloat pyramidVertices[] =
 };
 
 static GLfloat pyramidUvs[2 * 4 * 5] = {
+	
 	// Front Face
 	0.0, 0.25,
 	0.25, 0.25,
