@@ -59,6 +59,9 @@ private:
 	//Camera through which we see the world
 	Camera m_camera;
 
+	// Game font
+	Font m_font;	
+
 	//The current score that the player has.
 	int m_score{ 0 };
 

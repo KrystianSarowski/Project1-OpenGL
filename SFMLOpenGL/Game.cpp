@@ -43,9 +43,7 @@ unsigned char* img_data2;		// image data
 unsigned char* img_data3;		// image data
 unsigned char* img_data4;		// image data
 
-mat4 mvp, projection, model;	// Model View Projection
-
-Font font;						// Game font
+mat4 mvp, projection;	// Model View Projection
 
 Game::Game() : 
 	m_window(VideoMode(800, 600), 
@@ -377,7 +375,7 @@ void Game::initialize()
 	glEnable(GL_CULL_FACE);
 
 	// Load Font
-	if (!font.loadFromFile(".//Assets//Fonts//BBrick.ttf"))
+	if (!m_font.loadFromFile(".//Assets//Fonts//BBrick.ttf"))
 	{
 		std::cout << "Font not loaded" << std::endl;
 	}
@@ -401,13 +399,13 @@ void Game::update(sf::Time t_deltaTime)
 		if (m_gameObjects[i]->m_collisionBox.getGlobalBounds().intersects(m_playerObject->m_collisionBox.getGlobalBounds()))
 		{
 			//Was the player above the game object.
-			if (m_playerObject->getPreviousPos().y > m_gameObjects[i]->getPosition().y + 1.0f)
+			if (m_playerObject->getPreviousPos().y > m_gameObjects[i]->getPosition().y + 1.5f)
 			{
 				m_playerObject->setPosition(vec3(m_playerObject->getPosition().x, m_gameObjects[i]->getPosition().y + 2.0f, m_playerObject->getPosition().z));
 				m_playerObject->onGround();
 			}
 			//Was the player below the gameObject.
-			else if (m_playerObject->getPreviousPos().y < m_gameObjects[i]->getPosition().y - 1.0f)
+			else if (m_playerObject->getPreviousPos().y < m_gameObjects[i]->getPosition().y - 1.5f)
 			{
 				m_playerObject->setPosition(vec3(m_playerObject->getPosition().x, m_gameObjects[i]->getPosition().y - 2.0f, m_playerObject->getPosition().z));
 			}
@@ -450,11 +448,10 @@ void Game::render()
 	//Hud does not work so it is disabled.
 	string hud = "Score [" + string(toString(m_score)) + "]";
 
-	Text text(hud, font);
+	Text text(hud, m_font);
 	text.setFillColor(sf::Color(255, 255, 255, 170));
 	text.setCharacterSize(30.0f);
 	text.setPosition(50.f, 50.f);
-
 	//m_window.draw(text);
 
 	// Restore OpenGL render states		
