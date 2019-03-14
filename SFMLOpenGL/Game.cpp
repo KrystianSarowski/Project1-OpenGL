@@ -3,6 +3,7 @@
 
 // Helper to convert Number to String for HUD
 template <typename T>
+
 string toString(T number)
 {
 	ostringstream oss;
@@ -30,6 +31,8 @@ GLenum	error;		// OpenGL Error Code
 
 const string filename = ".//Assets//Textures//MyCube.tga";
 const string filename2 = ".//Assets//Textures//PlayerCube.tga";
+const string filename3 = ".//Assets//Textures//Pyramid.tga";
+const string filename4 = ".//Assets//Textures//ObjectCube.tga";
 
 int width;						// Width of texture
 int height;						// Height of texture
@@ -37,6 +40,8 @@ int comp_count;					// Component of texture
 
 unsigned char* img_data;		// image data
 unsigned char* img_data2;		// image data
+unsigned char* img_data3;		// image data
+unsigned char* img_data4;		// image data
 
 mat4 mvp, projection, model;	// Model View Projection
 
@@ -326,6 +331,8 @@ void Game::initialize()
 	// Set image data
 	img_data = stbi_load(filename.c_str(), &width, &height, &comp_count, 4);
 	img_data2 = stbi_load(filename2.c_str(), &width, &height, &comp_count, 4);
+	img_data3 = stbi_load(filename3.c_str(), &width, &height, &comp_count, 4);
+	img_data4 = stbi_load(filename4.c_str(), &width, &height, &comp_count, 4);
 
 	if (img_data == NULL)
 	{
@@ -441,10 +448,11 @@ void Game::render()
 	m_window.pushGLStates();
 
 	//Hud does not work so it is disabled.
-	string hud = "Heads Up Display [" + string(toString(m_score)) + "]";
+	string hud = "Score [" + string(toString(m_score)) + "]";
 
 	Text text(hud, font);
 	text.setFillColor(sf::Color(255, 255, 255, 170));
+	text.setCharacterSize(30.0f);
 	text.setPosition(50.f, 50.f);
 
 	//m_window.draw(text);
@@ -485,7 +493,7 @@ void Game::render()
 	glEnableVertexAttribArray(uvID);
 	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * CUBE_VERTICES) + (2 * CUBE_UVS) + (3 * PYRAMID_VERTICES)) * sizeof(GLfloat)));
 
-	bindObjectTexture();
+	bindPyramidTexture();
 
 	//Draw pyramidObject pyramids.
 	for (int i = 0; i < NUM_OF_PYRAMID_OBJECTS; i++)
@@ -508,6 +516,8 @@ void Game::render()
 	glEnableVertexAttribArray(uvID);
 	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * CUBE_VERTICES)) * sizeof(GLfloat)));	
 
+	bindObjectTexture();
+
 	//Draw gameObject cubes.
 	for (int i = 0; i < NUM_OF_GAME_OBJECTS; i++)
 	{
@@ -516,7 +526,7 @@ void Game::render()
 		glDrawElements(GL_TRIANGLES, 3 * CUBE_INDICES, GL_UNSIGNED_INT, NULL);
 	}
 
-	bindPlayerTexture();
+	bindGoalTexture();
 
 	//Draw endGoal cubes.
 	for (int i = 0; i < 3; i++)
@@ -525,6 +535,8 @@ void Game::render()
 		glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
 		glDrawElements(GL_TRIANGLES, 3 * CUBE_INDICES, GL_UNSIGNED_INT, NULL);
 	}
+
+	bindPlayerTexture();
 
 	//Draw playerObject cubes.
 	mvp = projection * m_camera.getWorldToViewMatrix() * m_playerObject->getModelToWorldMatrix();
@@ -584,6 +596,36 @@ void Game::bindPlayerTexture()
 }
 
 void Game::bindObjectTexture()
+{
+	// Bind to OpenGL
+	glTexImage2D(
+		GL_TEXTURE_2D,	//2D Texture Image
+		0,				//Mipmapping Level 
+		GL_RGBA,		//GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA, GL_RGB, GL_BGR, GL_RGBA 
+		width,			//Width
+		height,			//Height
+		0,				//Border
+		GL_RGBA,		//Bitmap
+		GL_UNSIGNED_BYTE,
+		img_data4);
+}
+
+void Game::bindPyramidTexture()
+{
+	// Bind to OpenGL
+	glTexImage2D(
+		GL_TEXTURE_2D,	//2D Texture Image
+		0,				//Mipmapping Level 
+		GL_RGBA,		//GL_RED, GL_GREEN, GL_BLUE, GL_ALPHA, GL_RGB, GL_BGR, GL_RGBA 
+		width,			//Width
+		height,			//Height
+		0,				//Border
+		GL_RGBA,		//Bitmap
+		GL_UNSIGNED_BYTE,
+		img_data3);
+}
+
+void Game::bindGoalTexture()
 {
 	// Bind to OpenGL
 	glTexImage2D(

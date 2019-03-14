@@ -78,6 +78,8 @@ private:
 
 	void bindPlayerTexture();
 	void bindObjectTexture();
+	void bindPyramidTexture();
+	void bindGoalTexture();
 };
 
 #endif  // ! GAME_H
