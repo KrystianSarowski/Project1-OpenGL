@@ -25,6 +25,10 @@ private:
 
 	//Velocity vector of PlayerObject.
 	vec3 m_velocity;
+	
+	vec3 m_acceleration;
+
+	vec3 m_jumpVelocity;
 
 public:
 	PlayerObject();

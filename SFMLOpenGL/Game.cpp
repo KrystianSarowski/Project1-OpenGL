@@ -36,6 +36,7 @@ int height;						// Height of texture
 int comp_count;					// Component of texture
 
 unsigned char* img_data;		// image data
+unsigned char* img_data2;		// image data
 
 mat4 mvp, projection, model;	// Model View Projection
 
@@ -324,6 +325,7 @@ void Game::initialize()
 
 	// Set image data
 	img_data = stbi_load(filename.c_str(), &width, &height, &comp_count, 4);
+	img_data2 = stbi_load(filename2.c_str(), &width, &height, &comp_count, 4);
 
 	if (img_data == NULL)
 	{
@@ -445,7 +447,7 @@ void Game::render()
 	text.setFillColor(sf::Color(255, 255, 255, 170));
 	text.setPosition(50.f, 50.f);
 
-	//window.draw(text);
+	//m_window.draw(text);
 
 	// Restore OpenGL render states		
 	m_window.popGLStates();
@@ -483,6 +485,8 @@ void Game::render()
 	glEnableVertexAttribArray(uvID);
 	glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0, (VOID*)(((3 * CUBE_VERTICES) + (2 * CUBE_UVS) + (3 * PYRAMID_VERTICES)) * sizeof(GLfloat)));
 
+	bindObjectTexture();
+
 	//Draw pyramidObject pyramids.
 	for (int i = 0; i < NUM_OF_PYRAMID_OBJECTS; i++)
 	{
@@ -511,6 +515,8 @@ void Game::render()
 		glUniformMatrix4fv(mvpID, 1, GL_FALSE, &mvp[0][0]);
 		glDrawElements(GL_TRIANGLES, 3 * CUBE_INDICES, GL_UNSIGNED_INT, NULL);
 	}
+
+	bindPlayerTexture();
 
 	//Draw endGoal cubes.
 	for (int i = 0; i < 3; i++)
@@ -564,9 +570,6 @@ void Game::resetGameLose()
 
 void Game::bindPlayerTexture()
 {
-	img_data = stbi_load(filename2.c_str(), &width, &height, &comp_count, 4);
-	glBindTexture(GL_TEXTURE_2D, to[0]);
-
 	// Bind to OpenGL
 	glTexImage2D(
 		GL_TEXTURE_2D,	//2D Texture Image
@@ -577,14 +580,11 @@ void Game::bindPlayerTexture()
 		0,				//Border
 		GL_RGBA,		//Bitmap
 		GL_UNSIGNED_BYTE,
-		img_data);
+		img_data2);
 }
 
 void Game::bindObjectTexture()
 {
-	img_data = stbi_load(filename.c_str(), &width, &height, &comp_count, 4);
-	glBindTexture(GL_TEXTURE_2D, to[0]);
-
 	// Bind to OpenGL
 	glTexImage2D(
 		GL_TEXTURE_2D,	//2D Texture Image
